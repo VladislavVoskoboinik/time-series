@@ -175,9 +175,10 @@ def initialize_train(series, seasonal_periods: int, forecast_horizon = 24):
 
     # Показываем график
     current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    plt.save(f"holt_winter_result_{current_datetime}.jpg")
+    #plt.savefig(f"time-series\exponential-smoothing\results\holt_winter_result_{current_datetime}.jpg") ???????
     plt.show()
     print(rmse)
+   
 
     # Выводим результаты
     '''''''''
