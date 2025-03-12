@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from datetime import datetime
 from metrics import root_mean_squared_error, calculate_all_metrics
+
 # from metrics import calculate_all_metrics
 
 
@@ -172,6 +174,8 @@ def initialize_train(series, seasonal_periods: int, forecast_horizon = 24):
     plt.tight_layout()
 
     # Показываем график
+    current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    plt.save(f"holt_winter_result_{current_datetime}.jpg")
     plt.show()
     print(rmse)
 

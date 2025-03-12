@@ -82,4 +82,4 @@ if __name__ == "__main__":
     initialize_train(generate_series_2(24), seasonal_periods=12)
     initialize_train(generate_series_3(24), seasonal_periods=12)
     initialize_train(generate_series_4(24), seasonal_periods=12)
-    #initialize_train(generate_series_5(24), seasonal_periods=12)
+    initialize_train(generate_series_5(24), seasonal_periods=12)
