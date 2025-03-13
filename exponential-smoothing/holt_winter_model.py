@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import time
 from datetime import datetime
 from metrics import root_mean_squared_error, calculate_all_metrics
 
@@ -175,8 +176,9 @@ def initialize_train(series, seasonal_periods: int, forecast_horizon = 24):
 
     # Показываем график
     current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    #plt.savefig(f"time-series\exponential-smoothing\results\holt_winter_result_{current_datetime}.jpg") ???????
-    plt.show()
+    plt.savefig(f"time-series\gpaph\holt_winter_result_{current_datetime}.jpg")
+    time.sleep(1)
+    #plt.show()
     print(rmse)
    
 
