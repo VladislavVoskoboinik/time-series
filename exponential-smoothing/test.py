@@ -37,6 +37,22 @@ def generate_series_5(size: int) -> pd.Series:
     series = 2 + 0.1 * t + np.sin(2 * np.pi * t / 12) + np.cos(2 * np.pi * t / 6)
     return pd.Series(series)
 
+def generate_series_6(size: int) -> pd.Series:
+    t = np.arange(size)
+    # Линейный тренд
+    trend = 0.15 * t
+    # Годовая сезонность
+    yearly_seasonality = 2 * np.sin(2 * np.pi * t / 12)
+    # Квартальная сезонность
+    quarterly_seasonality = 1.5 * np.cos(2 * np.pi * t / 4)
+    # Случайный шум
+    np.random.seed(42)  # для воспроизводимости
+    noise = np.random.normal(0, 0.5, size)
+    # Объединяем все компоненты
+    series = trend + yearly_seasonality + quarterly_seasonality + noise
+
+    return pd.Series(series)
+
 
 '''''
 # Генерация и визуализация временных рядов
@@ -78,8 +94,9 @@ plt.tight_layout()
 plt.show()
 '''''
 if __name__ == "__main__":
-    initialize_train(generate_series_1(24), seasonal_periods=12)
-    initialize_train(generate_series_2(24), seasonal_periods=12)
-    initialize_train(generate_series_3(24), seasonal_periods=12)
-    initialize_train(generate_series_4(24), seasonal_periods=12)
-    initialize_train(generate_series_5(24), seasonal_periods=12)
+    initialize_train(generate_series_1(100), seasonal_periods=12, forecast_horizon=20)
+    initialize_train(generate_series_2(100), seasonal_periods=12, forecast_horizon=20)
+    initialize_train(generate_series_3(100), seasonal_periods=12, forecast_horizon=20)
+    initialize_train(generate_series_4(100), seasonal_periods=12, forecast_horizon=20)
+    initialize_train(generate_series_5(100), seasonal_periods=12, forecast_horizon=20)
+    initialize_train(generate_series_6(100), seasonal_periods=12, forecast_horizon=20)

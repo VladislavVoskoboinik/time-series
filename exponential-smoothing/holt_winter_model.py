@@ -135,20 +135,24 @@ def optimized_coefs(series: np.array, seasonal_periods: int):
     return best_alpha, best_beta, best_gamma, best_rmse
 
 
-def initialize_train(series, seasonal_periods: int, forecast_horizon = 24):
+def initialize_train(series, seasonal_periods: int, forecast_horizon = 12):
     # Инициализируем и обучаем модель
-    best_alpha, best_beta, best_gamma, best_rmse = optimized_coefs(series, seasonal_periods)
+    train_dataset_size = int(len(series) - forecast_horizon)
+    train_data = series[:train_dataset_size]
+    
+    best_alpha, best_beta, best_gamma, best_rmse = optimized_coefs(train_data, seasonal_periods)
     # print({"best_alpha:":best_alpha, "best_beta: ": best_beta, "best_gamma: ":best_gamma, "best_rmse: ": best_rmse})
-    model = HoltWinters(series, seasonal_periods, alpha=best_alpha, beta=best_beta, gamma=best_gamma)
+    model = HoltWinters(train_data, seasonal_periods, alpha=best_alpha, beta=best_beta, gamma=best_gamma)
     fitted_values, rmse = model.fit()
 
     # Делаем прогноз на 12 периодов вперед
     forecast_values = model.forecast(forecast_horizon)
 
     # Создаем временные индексы для графика
-    time_index = np.arange(len(series))
+    time_index_series = np.arange(len(series))
+    time_index_train = np.arange(train_dataset_size)
     # Начинаем прогноз с последней точки исторических данных для непрерывности
-    forecast_index = np.arange(len(series) - 1, len(series) + len(forecast_values))
+    forecast_index = np.arange(train_dataset_size - 1, train_dataset_size + len(forecast_values))
     # Добавляем последнюю точку fitted values к прогнозу для непрерывности
     forecast_values = np.concatenate(([fitted_values[-1]], forecast_values))
 
@@ -157,11 +161,12 @@ def initialize_train(series, seasonal_periods: int, forecast_horizon = 24):
 
     # Настраиваем внешний вид графика
     plt.grid(True, linestyle='--', alpha=0.7)
-    plt.plot(time_index, series, 'o-', label='Исходные данные', color='blue', markersize=4)
-    plt.plot(time_index, fitted_values, '--', label='Подобранные значения', color='green', linewidth=2)
+    plt.plot(time_index_series, series, 'o-', label='Исходные данные', color='blue', markersize=4)
+    plt.plot(time_index_train, fitted_values, '--', label='Подобранные значения', color='green', linewidth=2)
     plt.plot(forecast_index, forecast_values, '--', label='Прогноз', color='red', linewidth=2)
 
-    print(calculate_all_metrics(series, forecast_values[1::]))
+
+    print(calculate_all_metrics(series[-forecast_horizon:], forecast_values[1::]))
     # Вычисляем метрики только для fitted values
 
     # Добавляем оформление
@@ -169,8 +174,9 @@ def initialize_train(series, seasonal_periods: int, forecast_horizon = 24):
     plt.xlabel('Время', fontsize=12)
     plt.ylabel('Значение', fontsize=12)
     plt.legend(fontsize=10)
-    plt.axvline(x=len(series) - 1, color="green").set_linestyle("--")
-    plt.text(len(series), 3, "Forecast boarder", ha="left")
+    plt.axvline(x=train_dataset_size - 1, color="green").set_linestyle("--")
+    plt.text(train_dataset_size, 3, "Forecast boarder", ha="left")
+
     # Добавляем отступы для лучшей читаемости
     plt.tight_layout()
 
@@ -180,14 +186,6 @@ def initialize_train(series, seasonal_periods: int, forecast_horizon = 24):
     time.sleep(1)
     #plt.show()
     print(rmse)
-   
 
-    # Выводим результаты
-    '''''''''
-    print("Исходные значения:")
-    print(y)
-    print("\nПрогноз на 12 периодов вперед:")
-    print(forecast_values)
-    '''''''''
 
 
