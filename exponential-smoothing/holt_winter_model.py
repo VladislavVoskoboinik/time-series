@@ -182,7 +182,7 @@ def initialize_train(series, seasonal_periods: int, forecast_horizon = 12):
 
     # Показываем график
     current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    plt.savefig(f"time-series\gpaph\holt_winter_result_{current_datetime}.jpg")
+    plt.savefig(f"time-series\exponential-smoothing\gpaph_exponential_smoothingholt_winter_result_{current_datetime}.jpg")
     time.sleep(1)
     #plt.show()
     print(rmse)

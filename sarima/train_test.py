@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import itertools
 from tqdm import tqdm
+import os
 
 from generate_series import generate_test_series, split_data
 from sarima_model import SARIMA
@@ -47,12 +48,12 @@ def grid_search_parameters(data, train_ratio=0.8):
     val_data = data[train_size:]
     
     # Define parameter grid
-    p_params = range(0, 3)  # AR parameters
-    d_params = range(0, 3)  # Differencing
-    q_params = range(0, 3)  # MA parameters
-    P_params = range(0, 3)  # Seasonal AR
-    D_params = range(0, 3)  # Seasonal differencing
-    Q_params = range(0, 3)  # Seasonal MA
+    p_params = range(0, 2)  # AR parameters
+    d_params = range(0, 2)  # Differencing
+    q_params = range(0, 2)  # MA parameters
+    P_params = range(0, 2)  # Seasonal AR
+    D_params = range(0, 2)  # Seasonal differencing
+    Q_params = range(0, 2)  # Seasonal MA
     m_params = [12]        # Fixed seasonal period (monthly)
     
     # Create all possible combinations
@@ -151,7 +152,7 @@ def train_and_evaluate(data, p=1, d=1, q=1, P=1, D=1, Q=1, m=12, train_ratio=0.8
     
     return model, train_data, test_data, predictions, rmse_value
 
-def plot_results(train_data, test_data, predictions, save=True):
+def plot_results(train_data, test_data, predictions, model_params=None, save=True):
     """
     Plot training data, test data, and predictions.
     
@@ -163,6 +164,8 @@ def plot_results(train_data, test_data, predictions, save=True):
         Test data
     predictions : array-like
         Model predictions
+    model_params : dict, optional
+        Dictionary containing model parameters
     save : bool
         Whether to save the plot
     """
@@ -177,19 +180,40 @@ def plot_results(train_data, test_data, predictions, save=True):
     plt.plot(range(test_start, test_start + len(test_data)), 
              test_data, label='Test Data', color='green')
     
-    # Plot predictions
+    # Plot predictions with filled gap
     plt.plot(range(test_start, test_start + len(predictions)), 
              predictions, label='Predictions', color='red', linestyle='--')
     
-    plt.title('SARIMA Model: Actual vs Predicted Values')
+    # Fill the gap between last training point and first prediction
+    plt.plot([test_start-1, test_start], 
+             [train_data[-1], predictions[0]], 
+             color='red', linestyle='--', alpha=0.5)
+    
+    # Create title with model parameters if provided
+    title = 'SARIMA Model: Actual vs Predicted Values'
+    if model_params:
+        p, d, q = model_params['p'], model_params['d'], model_params['q']
+        P, D, Q, m = model_params['P'], model_params['D'], model_params['Q'], model_params['m']
+        title = f'SARIMA({p},{d},{q})({P},{D},{Q}){m} Model: Actual vs Predicted Values'
+    
+    plt.title(title)
     plt.xlabel('Time')
     plt.ylabel('Value')
     plt.legend()
     plt.grid(True)
     
     if save:
+        # Create directory if it doesn't exist
+        os.makedirs('graph_sarima', exist_ok=True)
+        
+        # Generate timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        plt.savefig(f'graph_sarima_{timestamp}.png')
+        
+        # Create filename with timestamp
+        filename = f'sarima_forecast_{timestamp}.png'
+        
+        # Save plot
+        plt.savefig(os.path.join('graph_sarima', filename))
     
     plt.close()
 
@@ -204,6 +228,11 @@ if __name__ == "__main__":
         seasonal_period=12
     )
     
+    # Split data for training and validation
+    train_size = int(len(series) * 0.8)
+    train_data = series[:train_size]
+    val_data = series[train_size:]
+    
     # Find optimal parameters
     print("Finding optimal parameters...")
     grid_results = grid_search_parameters(series)
@@ -213,19 +242,25 @@ if __name__ == "__main__":
     print(f"SARIMA({best_p},{best_d},{best_q})({best_P},{best_D},{best_Q}){best_m}")
     print(f"Best RMSE: {grid_results['best_rmse']:.4f}")
     
-    # Train and evaluate with best parameters
-    model, train_data, test_data, predictions, rmse_value = train_and_evaluate(
-        series,
-        p=best_p,
-        d=best_d,
-        q=best_q,
-        P=best_P,
-        D=best_D,
-        Q=best_Q,
-        m=best_m
-    )
+    # Train final model with best parameters
+    model = SARIMA(p=best_p, d=best_d, q=best_q, P=best_P, D=best_D, Q=best_Q, m=best_m)
+    model.fit(train_data)
     
+    # Generate predictions
+    predictions = model.predict(len(val_data))
+    
+    # Calculate final RMSE
+    rmse_value = rmse(val_data, predictions)
     print(f"\nFinal test RMSE: {rmse_value:.4f}")
     
-    # Plot results
-    plot_results(train_data, test_data, predictions) 
+    # Plot results with model parameters
+    model_params = {
+        'p': best_p,
+        'd': best_d,
+        'q': best_q,
+        'P': best_P,
+        'D': best_D,
+        'Q': best_Q,
+        'm': best_m
+    }
+    plot_results(train_data, val_data, predictions, model_params) 

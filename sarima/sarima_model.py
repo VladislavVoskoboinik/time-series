@@ -121,17 +121,34 @@ class SARIMA:
             Time series data
         """
         self.data = np.array(data)
-        diff_data = self.prepare_data(self.data)
+        self.diff_data = self.prepare_data(self.data)
         
-        # Initial parameter guesses
-        initial_params = np.zeros(self.p + self.q + self.P + self.Q)
+        # Initial parameter guesses with small values
+        initial_params = np.zeros(self.p + self.q + self.P + self.Q) * 0.1
         
-        # Optimize parameters
+        # Parameter bounds to ensure stationarity and prevent numerical issues
+        bounds = []
+        # AR bounds (более строгие ограничения)
+        bounds.extend([(-0.95, 0.95)] * self.p)
+        # MA bounds (более строгие ограничения)
+        bounds.extend([(-0.95, 0.95)] * self.q)
+        # Seasonal AR bounds (более строгие ограничения)
+        bounds.extend([(-0.95, 0.95)] * self.P)
+        # Seasonal MA bounds (более строгие ограничения)
+        bounds.extend([(-0.95, 0.95)] * self.Q)
+        
+        # Optimize parameters with improved settings
         result = minimize(
             self._log_likelihood,
             initial_params,
-            args=(diff_data,),
-            method='CG' 
+            args=(self.diff_data,),
+            method='L-BFGS-B',
+            bounds=bounds,
+            options={
+                'maxiter': 1000,  # Увеличиваем максимальное число итераций
+                'ftol': 1e-6,     # Увеличиваем точность
+                'gtol': 1e-6      # Увеличиваем точность градиента
+            }
         )
         
         # Store optimized parameters
@@ -141,7 +158,8 @@ class SARIMA:
         self.sar_params = params[self.p+self.q:self.p+self.q+self.P]
         self.sma_params = params[self.p+self.q+self.P:]
         
-        self.residuals = self._compute_residuals(params, diff_data)
+        self.residuals = self._compute_residuals(params, self.diff_data)
+        self.sigma2 = np.var(self.residuals)
         self.fitted = True
         
         return self
