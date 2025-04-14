@@ -1,0 +1,11 @@
+numpy
+matplotlib
+pandas
+yfinance
+scipy
+tqdm
+datetime
+pytest
+scikit-learn
+astropy
+statsmodels
