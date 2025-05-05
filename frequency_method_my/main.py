@@ -11,12 +11,12 @@ for p in precentage_of_missed_data:
     np.random.seed(42)
     t_full = np.linspace(0, 20, 500)
     y_true = (
-        0.1 * t_full**1.5 + 
+        0.1 * t_full + 
         3 * np.sin(2*np.pi*0.8*t_full) + 
         2 * np.sin(2*np.pi*1.5*t_full) + 
         1.5 * np.sin(2*np.pi*0.3*t_full)
     )
-    y_obs = y_true + np.random.normal(0, 0.3, len(t_full))
+    y_obs = y_true + np.random.normal(0, 0.5, len(t_full))
     # Разделение на обучающую (80%) и тестовую (20%) части
     split_idx = int(len(t_full)*0.8)
     train_mask = np.full(len(t_full), False)
@@ -33,9 +33,9 @@ for p in precentage_of_missed_data:
 
     # Lomb-Scargle периодограмма
     ls = LombScargle(t_train, y_train)
-    freq, power = ls.autopower(minimum_frequency=0.1, maximum_frequency=3.0)
-    peaks, _ = find_peaks(power, prominence=np.std(power), distance=10)
-    top_freqs = freq[peaks][np.argsort(power[peaks])[-5:]]  # Выделить 5 частот
+    freq, power = ls.autopower(minimum_frequency=0.1, maximum_frequency=10.0)
+    peaks, _ = find_peaks(power, prominence=np.std(power), distance=5)
+    top_freqs = freq[peaks][np.argsort(power[peaks])[-3:]]  # Выделить 3 частот
 
     # Визуализация периодограммы
     plt.figure(figsize=(10, 4))
