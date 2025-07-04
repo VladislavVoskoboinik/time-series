@@ -19,7 +19,7 @@ jobs:
       - name: Comment if linting failed
         if: failure()
         id: comment
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@v3
         with:
           message: |
             :poop: Code linting failed, use `black` and `isort` to fix it.
