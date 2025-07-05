@@ -3,7 +3,6 @@ name: Python tests
 on:
   pull_request:
 
-
 jobs:
   linting:
     runs-on: ubuntu-latest
@@ -12,18 +11,17 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.12
-      - uses: isort/isort-action@master
-        with:
-          requirementsFiles: "requirements.txt"
-      - uses: psf/black@stable
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt black isort
+      - name: Run isort
+        run: isort --check .
+      - name: Run black
+        run: black --check .
       - name: Comment if linting failed
         if: failure()
-        id: comment
-        uses: thollander/actions-comment-pull-request@v3
+        uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
             :poop: Code linting failed, use `black` and `isort` to fix it.
-      - name: Fail
-        if: steps.comment.conclusion != 'failure' && steps.comment.conclusion != 'skipped'
-        run: exit 1
-  
